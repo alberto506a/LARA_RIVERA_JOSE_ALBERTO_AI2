@@ -1,0 +1,57 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Instalacion de apache
+      yum:
+        name: httpd
+        state: latest
+
+    - name: Iniciar apache
+      service:
+        name: httpd
+        enabled: yes
+        state: started
+
+    - name: Iniciar Firewall
+      service:
+        name: firewalld
+        enabled: yes
+        state: started
+
+    - name: Config Firewall
+      firewalld:
+        service: http
+        immediate: yes
+        permanent: yes
+        state: enabled
+
+    - name: Crear Grupo Admin
+      group:
+        name: web
+        state: present
+
+    - name: Crear Usuario Admin
+      user:
+        name: webadm
+        comment: "Administrador WEB"
+        password: "{{ 'Qwer1234%%' | password_hash('sha512') }}"
+        groups: web
+        append: yes
+
+    - name: Permisos de Carpeta
+      file:
+        path: /var/www/html
+        owner: root
+        group: web
+        state: directory
+        mode: '2775'
+
+    - name: Crear Pagina Default
+      copy:
+        content: "Hola desde {{ ansible_fqdn }} en {{ ansible_default_ipv4.address }}"
+        dest: /var/www/html/index.html
+        owner: webadm
+        group: web
+        mode: '0664'
+

@@ -1,0 +1,20 @@
+---
+- name: Buscar carpeta en host de Windows
+  hosts: win
+  tasks:
+
+    - name: Buscar carpeta
+      ansible.windows.win_find:
+        paths: C:\{{ ansible_date_time.date }}
+      register: result
+
+    - name: Mostrar número de carpetas encontradas
+      ansible.builtin.debug:
+        var: result.examined
+
+    - name: Crear copia de archivos si se encuentra la carpeta
+      ansible.windows.win_copy:
+        src: C:\ansible_examples\
+        dest: C:\ansible_examples_bkp\
+        remote_src: yes
+      when: result.examined > 0
